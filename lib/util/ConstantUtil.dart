@@ -6,3 +6,7 @@ class UrlConstant {
   static const getStationUrl = '$baseUrl?act=getDirStation';
   static const getBusOnLineUrl = '$baseUrl?act=busTime';
 }
+
+class KeyConstant {
+  static const keyBusLine = "busLine";
+}

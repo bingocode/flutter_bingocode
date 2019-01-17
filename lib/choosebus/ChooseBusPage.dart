@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -6,9 +7,12 @@ import 'package:flutter_bingocode/bean/StationInfo.dart';
 import 'package:flutter_bingocode/resources/strings.dart';
 import 'package:flutter_bingocode/showbus/ShowBusPage.dart';
 import 'package:flutter_bingocode/util/ConstantUtil.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:html/dom.dart' as dom;
 import 'package:html/parser.dart' show parse;
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_bingocode/resources/colors.dart';
 
 class ChooseBusPage extends StatefulWidget {
   @override
@@ -29,7 +33,13 @@ class ChooseBusState extends State<ChooseBusPage> {
   @override
   void initState() {
     super.initState();
-    _getBusList();
+    _getSavedBusLine().then((String saveBusLine) {
+      busLine = saveBusLine;
+      if (busLine != null) {
+        _getDirList(busLine);
+      }
+      _getBusList();
+    });
   }
 
   @override
@@ -42,34 +52,47 @@ class ChooseBusState extends State<ChooseBusPage> {
         children: <Widget>[
           Padding(
               padding: const EdgeInsets.only(bottom: 20.0),
-              child: MaterialButton(
-                color: Colors.blueAccent,
-                child:
-                    busLine == null ? Text(Strings.chooseBus) : Text(busLine),
-                onPressed: () {
-                  showDialog(
-                      context: context,
-                      builder: (BuildContext context) {
-                        return SimpleDialog(
-                          title: Text(Strings.chooseBus),
-                          children: _getBusLineWeights(context),
-                        );
-                      });
+              child: GestureDetector(
+                onTap: () {
+                  _saveBusLine(busLine);
                 },
+                child: Text(
+                  StringRes.saveBusLine,
+                  style: TextStyle(
+                    color: Colors.blue,
+                  ),
+                ),
               )),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 20.0),
+            child: MaterialButton(
+              color: Colors.blueAccent,
+              child: busLine == null ? Text(StringRes.chooseBus) : Text(busLine),
+              onPressed: () {
+                showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return SimpleDialog(
+                        title: Text(StringRes.chooseBus),
+                        children: _getBusLineWeights(context),
+                      );
+                    });
+              },
+            ),
+          ),
           Padding(
               padding: const EdgeInsets.only(bottom: 20.0),
               child: MaterialButton(
                 color: Colors.blueAccent,
                 child: busDir == null
-                    ? Text(Strings.chooseDir)
+                    ? Text(StringRes.chooseDir)
                     : Text(busDir.direction),
                 onPressed: () {
                   showDialog(
                       context: context,
                       builder: (BuildContext context) {
                         return SimpleDialog(
-                          title: Text(Strings.chooseDir),
+                          title: Text(StringRes.chooseDir),
                           children: _getBusDirWeights(context),
                         );
                       });
@@ -80,14 +103,14 @@ class ChooseBusState extends State<ChooseBusPage> {
               child: MaterialButton(
                 color: Colors.blueAccent,
                 child: busSelfStop == null
-                    ? Text(Strings.chooseStation)
+                    ? Text(StringRes.chooseStation)
                     : Text(busSelfStop.name),
                 onPressed: () {
                   showDialog(
                       context: context,
                       builder: (BuildContext context) {
                         return SimpleDialog(
-                          title: Text(Strings.chooseStation),
+                          title: Text(StringRes.chooseStation),
                           children: _getBusStationWeights(context),
                         );
                       });
@@ -96,15 +119,46 @@ class ChooseBusState extends State<ChooseBusPage> {
           Padding(
             padding: const EdgeInsets.only(bottom: 20.0),
             child: MaterialButton(
-                color:Colors.greenAccent,
-                child: Text(Strings.queryBus),
+                color: Colors.greenAccent,
+                child: Text(StringRes.queryBus),
                 onPressed: () {
-                  _getOnlineBusInfo(busLine, busDir.directionId, busSelfStop.index);
+                  if (busLine != null &&
+                      busDir != null &&
+                      busSelfStop != null) {
+                    _getOnlineBusInfo(
+                        busLine, busDir.directionId, busSelfStop.index);
+                  } else {
+                    String msg = StringRes.choose_bus_hint;
+                    if (busDir == null) {
+                      msg = StringRes.choose_dir_hint;
+                    } else if (busSelfStop == null) {
+                      msg = StringRes.choose_selfStop_hint;
+                    }
+                    Fluttertoast.showToast(
+                        msg: msg,
+                        toastLength: Toast.LENGTH_SHORT,
+                        gravity: ToastGravity.CENTER,
+                        timeInSecForIos: 1,
+                        bgcolor: ColorRes.gray_toast_bg,
+                        textcolor: ColorRes.white
+                    );
+                  }
+
                 }),
           )
         ],
       ),
     ));
+  }
+
+  _saveBusLine(String busLine) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setString(KeyConstant.keyBusLine, busLine);
+  }
+
+  Future<String> _getSavedBusLine() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(KeyConstant.keyBusLine);
   }
 
   List<SimpleDialogOption> _getBusLineWeights(BuildContext context) {
@@ -227,7 +281,7 @@ class ChooseBusState extends State<ChooseBusPage> {
   }
 
   // 获取实时公交信息
-  void _getOnlineBusInfo (
+  void _getOnlineBusInfo(
       String busLine, String busDir, String busSelfStop) async {
     var busOnlineUrl = '${UrlConstant
         .getBusOnLineUrl}&selBLine=$busLine&selBDir=$busDir&selBStop=$busSelfStop';
@@ -259,6 +313,7 @@ class ChooseBusState extends State<ChooseBusPage> {
       print(
           'request busOnline error ${responseBusOnline.statusCode.toString()}');
     }
+    clearTags();
     if (buscList.length > 0) {
       for (String index in buscList) {
         for (StationInfo station in stationInfoList) {
@@ -279,7 +334,15 @@ class ChooseBusState extends State<ChooseBusPage> {
     }
     Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => ShowBusPage(busLine, busDir, busSelfStop, stationInfoList))
-    );
+        MaterialPageRoute(
+            builder: (context) =>
+                ShowBusPage(busLine, busDir, busSelfStop, stationInfoList)));
+  }
+
+  void clearTags() {
+    for (StationInfo station in stationInfoList) {
+      station.hasNextBus = false;
+      station.hasBus = false;
+    }
   }
 }
