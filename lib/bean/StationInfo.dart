@@ -5,6 +5,8 @@ class StationInfo {
   var hasBus = false;
   // 有公交正在驶往该站
   var hasNextBus = false;
+
+  var isSelfStop = false;
   StationInfo(this.name, this.index);
 
 }

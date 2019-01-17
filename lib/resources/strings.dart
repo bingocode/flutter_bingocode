@@ -7,4 +7,5 @@ class StringRes {
   static const String choose_bus_hint = '请选择公交路线';
   static const String choose_dir_hint = '请选择方向';
   static const String choose_selfStop_hint = '请选择所在站点';
+  static const String save_successed = '保存成功';
 }
