@@ -1,8 +1,7 @@
 # flutter_bingocode
 
-A new Flutter application.
+flutter项目实践.
 
-## Getting Started
+## 查询北京实时公交信息
 
-For help getting started with Flutter, view our online
-[documentation](https://flutter.io/).
+
