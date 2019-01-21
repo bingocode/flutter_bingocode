@@ -1,45 +1,33 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bingocode/bean/StationInfo.dart';
-import 'package:flutter_bingocode/util/ConstantUtil.dart';
-import 'package:html/dom.dart' as dom;
-import 'package:html/parser.dart' show parse;
-import 'package:http/http.dart' as http;
+import 'package:flutter_bingocode/manager/BusManager.dart';
 
 class ShowBusPage extends StatefulWidget {
-  String busLine;
-  String dirId;
-  String selfStationId;
-  var stationInfoList = <StationInfo>[];
-
-  ShowBusPage(
-      this.busLine, this.dirId, this.selfStationId, this.stationInfoList);
-
   @override
   State<StatefulWidget> createState() {
-    return ShowBusState(busLine, dirId, selfStationId, stationInfoList);
+    return ShowBusState();
   }
 }
 
 class ShowBusState extends State<ShowBusPage> {
-  final Utf8Decoder decoder = new Utf8Decoder();
-  String busLine;
-  String dirId;
-  String selfStationId;
-  var stationInfoList = <StationInfo>[];
+  static const UPDATE_TIME = 10;
+  BusManager _busManager;
   Timer timer;
-
-  ShowBusState(
-      this.busLine, this.dirId, this.selfStationId, this.stationInfoList);
+  UpdateCallBack<List<StationInfo>> updateStationsCallBack;
 
   @override
   void initState() {
     super.initState();
-    timer = Timer.periodic(const Duration(seconds: 10), (timer) {
+    updateStationsCallBack = (List<StationInfo> dirinfos) {
+      setState(() {});
+    };
+    _busManager = BusManager();
+    // 每隔10s更新界面
+    timer = Timer.periodic(const Duration(seconds: UPDATE_TIME), (timer) {
       print('refreshData');
-      _getOnlineBusInfo(busLine, dirId, selfStationId);
+      _busManager.getOnlineBusInfo(context).then(updateStationsCallBack);
     });
   }
 
@@ -53,12 +41,14 @@ class ShowBusState extends State<ShowBusPage> {
         home: Scaffold(
             body: ListView.separated(
                 // 按需加载，适合加载长列表
-                itemCount: stationInfoList.length,
+                itemCount: _busManager.stationInfoList.length,
                 separatorBuilder: (context, index) {
-                  return Divider(height: 1,);
+                  return Divider(
+                    height: 1,
+                  );
                 },
                 itemBuilder: (context, index) {
-                  return _getListTitle(stationInfoList[index]);
+                  return _getListTitle(_busManager.stationInfoList[index]);
                 })));
   }
 
@@ -79,9 +69,12 @@ class ShowBusState extends State<ShowBusPage> {
       busIconColor = Colors.greenAccent;
     }
     if (station.isSelfStop) {
-      selfTextStyle.copyWith(fontWeight: FontWeight.bold);
+      selfTextStyle = TextStyle(fontWeight: FontWeight.bold);
     }
     return ListTile(
+        leading: station.isSelfStop
+            ? Icon(Icons.star, color: Colors.red)
+            : Icon(Icons.arrow_downward),
         trailing: busIconColor == null
             ? Icon(Icons.arrow_downward)
             : Icon(Icons.directions_bus, color: busIconColor),
@@ -89,72 +82,6 @@ class ShowBusState extends State<ShowBusPage> {
             text: data,
             style: selfTextStyle,
             children: <TextSpan>[hasNextBusSpan, hasBusSpan])));
-  }
-
-  void _getOnlineBusInfo(
-      String busLine, String busDir, String busSelfStop) async {
-    var busOnlineUrl =
-        '${UrlConstant.getBusOnLineUrl}&selBLine=$busLine&selBDir=$busDir&selBStop=$busSelfStop';
-    var responseBusOnline = await http.get(busOnlineUrl);
-    var data = decoder.convert(responseBusOnline.bodyBytes);
-    var buscList = <String>[]; //途中车辆
-    var bussList = <String>[]; // 到站车辆
-    if (responseBusOnline.statusCode == 200) {
-      Map<String, dynamic> dataMap = json.decode(data);
-      String htmlStr = dataMap['html'];
-      dom.Document document = parse(htmlStr);
-      var aEliments = document.getElementsByTagName("i");
-      for (dom.Element e in aEliments) {
-        var classValue = e.attributes['class'];
-        if (classValue != null) {
-          if (classValue == 'busc') {
-            //途中车辆
-            dom.Element parent = e.parent;
-            String parentId = parent.attributes['id'];
-            buscList.add(parentId.substring(0, parentId.length - 1));
-          } else if (classValue == 'buss') {
-            // 到站车辆
-            dom.Element parent = e.parent;
-            bussList.add((parent.attributes['id']));
-          }
-        }
-      }
-    } else {
-      print(
-          'request busOnline error ${responseBusOnline.statusCode.toString()}');
-    }
-    clearTags();
-    for (StationInfo station in stationInfoList) {
-      if (station.index == busSelfStop) {
-        station.isSelfStop = true;
-      }
-      if (buscList.length > 0) {
-        for (String index in buscList) {
-          if (index == station.index) {
-            station.hasNextBus = true;
-            break;
-          }
-        }
-      }
-
-      if (bussList.length > 0) {
-        for (String index in bussList) {
-          if (index == station.index) {
-            station.hasBus = true;
-            break;
-          }
-        }
-      }
-    }
-    setState(() {});
-  }
-
-  void clearTags() {
-    for (StationInfo station in stationInfoList) {
-      station.isSelfStop = false;
-      station.hasNextBus = false;
-      station.hasBus = false;
-    }
   }
 
   @override
