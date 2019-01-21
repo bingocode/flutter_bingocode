@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bingocode/bean/DirInfo.dart';
 import 'package:flutter_bingocode/bean/StationInfo.dart';
 import 'package:flutter_bingocode/resources/strings.dart';
+import 'package:flutter_bingocode/resources/styles.dart';
 import 'package:flutter_bingocode/showbus/ShowBusPage.dart';
 import 'package:flutter_bingocode/util/ConstantUtil.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -43,113 +44,114 @@ class ChooseBusState extends State<ChooseBusPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-          padding: const EdgeInsets.only(top: 200.0, left: 5.0, right: 5.0),
+    return Container(
+      decoration: BoxDecoration(image: DecorationImage(image: AssetImage('assets/choose_bus_bg.jpg'), fit: BoxFit.fitHeight)),
+      child: Center(
           child: new Column(
-              children: <Widget>[
-          Padding(
-          padding: const EdgeInsets.only(bottom: 20.0),
-          child: GestureDetector(
-            onTap: () {
-              _saveBusLine(busLine);
-            },
-            child: Text(
-              StringRes.saveBusLine,
-              style: TextStyle(
-                color: Colors.blue,
+            mainAxisAlignment: MainAxisAlignment.center, // 主轴方向居中
+            crossAxisAlignment: CrossAxisAlignment.center, // 辅轴方向居中
+            children: <Widget>[
+              Padding(
+                  padding: const EdgeInsets.only(bottom: 20.0),
+                  child: GestureDetector(
+                    onTap: () {
+                      _saveBusLine(busLine);
+                    },
+                    child: Text(StringRes.saveBusLine,
+                        style: StyleRes.saveBusButtonTextStyle),
+                  )),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 20.0),
+                child: MaterialButton(
+                  color: Colors.blueAccent,
+                  child: busLine == null
+                      ? Text(StringRes.chooseBus,
+                      style: StyleRes.chooseBusButtonTextStyle)
+                      : Text(busLine, style: StyleRes.chooseBusButtonTextStyle),
+                  onPressed: () {
+                    showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return SimpleDialog(
+                            title: Text(StringRes.chooseBus),
+                            children: _getBusLineWeights(context),
+                          );
+                        });
+                  },
+                ),
               ),
-            ),
+              Padding(
+                  padding: const EdgeInsets.only(bottom: 20.0),
+                  child: MaterialButton(
+                    color: Colors.blueAccent,
+                    child: busDir == null
+                        ? Text(StringRes.chooseDir,
+                        style: StyleRes.chooseBusButtonTextStyle)
+                        : Text(busDir.direction,
+                        style: StyleRes.chooseBusButtonTextStyle),
+                    onPressed: () {
+                      showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return SimpleDialog(
+                              title: Text(StringRes.chooseDir),
+                              children: _getBusDirWeights(context),
+                            );
+                          });
+                    },
+                  )),
+              Padding(
+                  padding: const EdgeInsets.only(bottom: 20.0),
+                  child: MaterialButton(
+                    color: Colors.blueAccent,
+                    child: busSelfStop == null
+                        ? Text(StringRes.chooseStation,
+                        style: StyleRes.chooseBusButtonTextStyle)
+                        : Text(busSelfStop.name,
+                        style: StyleRes.chooseBusButtonTextStyle),
+                    onPressed: () {
+                      showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return SimpleDialog(
+                              title: Text(StringRes.chooseStation),
+                              children: _getBusStationWeights(context),
+                            );
+                          });
+                    },
+                  )),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 20.0),
+                child: MaterialButton(
+                    color: Colors.greenAccent,
+                    child: Text(StringRes.queryBus,
+                        style: StyleRes.chooseBusButtonTextStyle),
+                    onPressed: () {
+                      if (busLine != null &&
+                          busDir != null &&
+                          busSelfStop != null) {
+                        _getOnlineBusInfo(
+                            busLine, busDir.directionId, busSelfStop.index);
+                      } else {
+                        String msg = StringRes.choose_bus_hint;
+                        if (busDir == null) {
+                          msg = StringRes.choose_dir_hint;
+                        } else if (busSelfStop == null) {
+                          msg = StringRes.choose_selfStop_hint;
+                        }
+                        Fluttertoast.showToast(
+                            msg: msg,
+                            toastLength: Toast.LENGTH_SHORT,
+                            gravity: ToastGravity.BOTTOM,
+                            timeInSecForIos: 1,
+                            backgroundColor: Colors.grey,
+                            textColor: Colors.white);
+                      }
+                    }),
+              )
+            ],
           )),
-      Padding(
-        padding: const EdgeInsets.only(bottom: 20.0),
-        child: MaterialButton(
-          color: Colors.blueAccent,
-          child:
-          busLine == null ? Text(
-              StringRes.chooseBus, style: TextStyle(color: Colors.white))
-              : Text(busLine, style: TextStyle(color: Colors.white)),
-          onPressed: () {
-            showDialog(
-                context: context,
-                builder: (BuildContext context) {
-                  return SimpleDialog(
-                    title: Text(StringRes.chooseBus),
-                    children: _getBusLineWeights(context),
-                  );
-                });
-          },
-        ),
-      ),
-      Padding(
-          padding: const EdgeInsets.only(bottom: 20.0),
-          child: MaterialButton(
-            color: Colors.blueAccent,
-            child: busDir == null
-                ? Text(
-              StringRes.chooseDir, style: TextStyle(color: Colors.white),)
-                : Text(busDir.direction, style: TextStyle(color: Colors.white)),
-            onPressed: () {
-              showDialog(
-                  context: context,
-                  builder: (BuildContext context) {
-                    return SimpleDialog(
-                      title: Text(StringRes.chooseDir),
-                      children: _getBusDirWeights(context),
-                    );
-                  });
-            },
-          )),
-      Padding(
-          padding: const EdgeInsets.only(bottom: 20.0),
-          child: MaterialButton(
-            color: Colors.blueAccent,
-            child: busSelfStop == null
-                ? Text(
-                StringRes.chooseStation, style: TextStyle(color: Colors.white))
-                : Text(busSelfStop.name, style: TextStyle(color: Colors.white)),
-            onPressed: () {
-              showDialog(
-                  context: context,
-                  builder: (BuildContext context) {
-                    return SimpleDialog(
-                      title: Text(StringRes.chooseStation),
-                      children: _getBusStationWeights(context),
-                    );
-                  });
-            },
-          )),
-      Padding(
-        padding: const EdgeInsets.only(bottom: 20.0),
-        child: MaterialButton(
-          color: Colors.greenAccent,
-          child: Text(StringRes.queryBus, style: TextStyle(color: Colors.white)),
-              onPressed: () {
-                if (busLine != null &&
-                    busDir != null &&
-                    busSelfStop != null) {
-                  _getOnlineBusInfo(
-                      busLine, busDir.directionId, busSelfStop.index);
-                } else {
-                  String msg = StringRes.choose_bus_hint;
-                  if (busDir == null) {
-                    msg = StringRes.choose_dir_hint;
-                  } else if (busSelfStop == null) {
-                    msg = StringRes.choose_selfStop_hint;
-                  }
-                  Fluttertoast.showToast(
-                      msg: msg,
-                      toastLength: Toast.LENGTH_SHORT,
-                      gravity: ToastGravity.BOTTOM,
-                      timeInSecForIos: 1,
-                      backgroundColor: Colors.grey,
-                      textColor: Colors.white);
-                }
-              }),
-        )
-        ],
-      ),
-    ));
+    );
   }
 
   _saveBusLine(String busLine) async {
@@ -183,8 +185,7 @@ class ChooseBusState extends State<ChooseBusPage> {
             busLine = bus;
             stationInfoList.clear();
             _getDirList(busLine);
-            setState(() {
-            });
+            setState(() {});
           }
         },
       ));
@@ -236,7 +237,7 @@ class ChooseBusState extends State<ChooseBusPage> {
     if (responseAllBus.statusCode == 200) {
       dom.Document document = parse(data);
       List<dom.Element> aEliments =
-      document.getElementsByTagName("dd").where((dom.Element e) {
+          document.getElementsByTagName("dd").where((dom.Element e) {
         return e.attributes["id"] == 'selBLine';
       }).toList();
       print('all busLine:');
@@ -289,18 +290,16 @@ class ChooseBusState extends State<ChooseBusPage> {
       }
     } else {
       print(
-          'request busStationLists error ${responseBusStation.statusCode
-              .toString()}');
+          'request busStationLists error ${responseBusStation.statusCode.toString()}');
     }
     setState(() {});
   }
 
   // 获取实时公交信息
-  void _getOnlineBusInfo(String busLine, String busDir,
-      String busSelfStop) async {
+  void _getOnlineBusInfo(
+      String busLine, String busDir, String busSelfStop) async {
     var busOnlineUrl =
-        '${UrlConstant
-        .getBusOnLineUrl}&selBLine=$busLine&selBDir=$busDir&selBStop=$busSelfStop';
+        '${UrlConstant.getBusOnLineUrl}&selBLine=$busLine&selBDir=$busDir&selBStop=$busSelfStop';
     var responseBusOnline = await http.get(busOnlineUrl);
     var data = decoder.convert(responseBusOnline.bodyBytes);
     var buscList = <String>[]; //途中车辆

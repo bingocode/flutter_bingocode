@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bingocode/choosebus/ChooseBusPage.dart';
-void main() => runApp(new MyApp());
+import 'package:flutter/rendering.dart';
+void main() {
+  //debugPaintSizeEnabled=true;
+  runApp(new MyApp());
+}
 
 class MyApp extends StatelessWidget {
   // This widget is the root of your application.
@@ -13,6 +17,9 @@ class MyApp extends StatelessWidget {
       ),
       home: Scaffold(
         body: ChooseBusPage(),
+        floatingActionButton: new Theme(data: Theme.of(context).copyWith(
+          accentColor: Colors.redAccent
+        ), child: FloatingActionButton(onPressed: null, child: Icon(Icons.grade))),
       ),
     );
   }
