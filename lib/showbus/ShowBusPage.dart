@@ -21,7 +21,6 @@ class ShowBusPage extends StatefulWidget {
   State<StatefulWidget> createState() {
     return ShowBusState(busLine, dirId, selfStationId, stationInfoList);
   }
-
 }
 
 class ShowBusState extends State<ShowBusPage> {
@@ -38,7 +37,7 @@ class ShowBusState extends State<ShowBusPage> {
   @override
   void initState() {
     super.initState();
-    timer = Timer.periodic(const Duration(seconds: 10),(timer) {
+    timer = Timer.periodic(const Duration(seconds: 10), (timer) {
       print('refreshData');
       _getOnlineBusInfo(busLine, dirId, selfStationId);
     });
@@ -47,52 +46,55 @@ class ShowBusState extends State<ShowBusPage> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: Scaffold(
-        body: ListView.builder(
-            itemCount: stationInfoList.length,
-            itemBuilder: (context, index) {
-              return ListTile(
-                title: GestureDetector(
-                  child: _getStationTextOnLine(stationInfoList[index]),
-                ),
-              );
-            }),
-      ),
-    );
+        title: 'Flutter Demo',
+        theme: ThemeData(
+          primarySwatch: Colors.blue,
+        ),
+        home: Scaffold(
+            body: ListView.separated(
+                // 按需加载，适合加载长列表
+                itemCount: stationInfoList.length,
+                separatorBuilder: (context, index) {
+                  return Divider(height: 1,);
+                },
+                itemBuilder: (context, index) {
+                  return _getListTitle(stationInfoList[index]);
+                })));
   }
 
-  Text _getStationTextOnLine(StationInfo station) {
+  ListTile _getListTitle(StationInfo station) {
     String data = station.name;
     TextStyle selfTextStyle = TextStyle();
     TextSpan hasNextBusSpan = TextSpan();
     TextSpan hasBusSpan = TextSpan();
+    Color busIconColor;
     if (station.hasNextBus) {
-      hasNextBusSpan = TextSpan(text: '->_->（即将到站)',style: TextStyle(color: Colors.blueAccent));
+      hasNextBusSpan = TextSpan(
+          text: '->_->（即将到站)', style: TextStyle(color: Colors.blueAccent));
+      busIconColor = Colors.blueAccent;
     }
     if (station.hasBus) {
-      hasBusSpan = TextSpan(text: '^_^ (已到站)',style: TextStyle(color: Colors.greenAccent));
+      hasBusSpan = TextSpan(
+          text: '^_^ (已到站)', style: TextStyle(color: Colors.greenAccent));
+      busIconColor = Colors.greenAccent;
     }
     if (station.isSelfStop) {
-      selfTextStyle = TextStyle(fontWeight:FontWeight.bold);
+      selfTextStyle.copyWith(fontWeight: FontWeight.bold);
     }
-    return Text.rich(TextSpan(
-      text: data,
-      style: selfTextStyle,
-      children: <TextSpan>[
-        hasNextBusSpan,
-        hasBusSpan
-      ]
-    ));
+    return ListTile(
+        trailing: busIconColor == null
+            ? Icon(Icons.arrow_downward)
+            : Icon(Icons.directions_bus, color: busIconColor),
+        title: Text.rich(TextSpan(
+            text: data,
+            style: selfTextStyle,
+            children: <TextSpan>[hasNextBusSpan, hasBusSpan])));
   }
 
   void _getOnlineBusInfo(
       String busLine, String busDir, String busSelfStop) async {
-    var busOnlineUrl = '${UrlConstant
-        .getBusOnLineUrl}&selBLine=$busLine&selBDir=$busDir&selBStop=$busSelfStop';
+    var busOnlineUrl =
+        '${UrlConstant.getBusOnLineUrl}&selBLine=$busLine&selBDir=$busDir&selBStop=$busSelfStop';
     var responseBusOnline = await http.get(busOnlineUrl);
     var data = decoder.convert(responseBusOnline.bodyBytes);
     var buscList = <String>[]; //途中车辆
@@ -144,8 +146,7 @@ class ShowBusState extends State<ShowBusPage> {
         }
       }
     }
-    setState(() {
-    });
+    setState(() {});
   }
 
   void clearTags() {
@@ -161,6 +162,4 @@ class ShowBusState extends State<ShowBusPage> {
     timer.cancel();
     super.dispose();
   }
-
-
 }
