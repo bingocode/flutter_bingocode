@@ -7,6 +7,8 @@ dependencies:
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
+  flare_flutter: 1.0.11
+  nima: ^1.0.0
   cupertino_icons: ^0.1.2
   shared_preferences: ^0.4.2
   html: any
@@ -30,6 +32,14 @@ flutter:
   uses-material-design: true
   assets:
     - choose_bus_bg.jpg
+    - show_bus_bg.jpg
+    - runLoading.nima
+    - runLoading0.png
+    - runLoading1.png
+    - runLoading2.png
+    - runLoading3.png
+    - runLoading4.png
+    - runLoading5.png
   # To add assets to your application, add an assets section, like this:
   # assets:
   #  - images/a_dot_burr.jpeg

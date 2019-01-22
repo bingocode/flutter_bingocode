@@ -11,4 +11,6 @@ class StringRes {
   static const String next_step = '下一步';
   static const String confirm = '确定';
   static const String concel = '取消';
+  static const String arrived_bus = '(已到站)';
+  static const String coming_bus = '(即将到站)';
 }
