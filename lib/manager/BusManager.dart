@@ -103,6 +103,9 @@ class BusManager {
 
   // 获取所有公交线
   Future<List<String>> getBusList() async {
+    if (busLineList.isNotEmpty) {
+      return busLineList;
+    }
     busLineList.clear();
     var responseAllBus = await http.get(UrlConstant.getBusesUrl);
     var data = decoder.convert(responseAllBus.bodyBytes);

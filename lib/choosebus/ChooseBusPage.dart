@@ -3,12 +3,14 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_bingocode/bean/DirInfo.dart';
 import 'package:flutter_bingocode/bean/StationInfo.dart';
+import 'package:flutter_bingocode/choosebus/SearchBusPage.dart';
 import 'package:flutter_bingocode/manager/BusManager.dart';
 import 'package:flutter_bingocode/resources/strings.dart';
 import 'package:flutter_bingocode/resources/styles.dart';
 import 'package:flutter_bingocode/showbus/ShowBusPage.dart';
 import 'package:flutter_bingocode/util/CommonUtil.dart';
 import 'package:flutter_bingocode/util/ConstantUtil.dart';
+import 'package:nima/nima_actor.dart';
 
 class ChooseBusPage extends StatefulWidget {
   @override
@@ -37,7 +39,14 @@ class ChooseBusState extends State<ChooseBusPage> {
     super.initState();
     _busManager = BusManager();
     updateBusesCallBack = (List<String> buses) {
-      setState(() {});
+      showSearch(context: context, delegate: searchBarDelegate(buses))
+          .then((String bus) {
+        setState(() {
+          if (bus != null && bus != _busManager.busLine) {
+            _busManager.busLine = bus;
+          }
+        });
+      });
     };
     updateDirCallBack = (List<DirInfo> dirinfos) {
       setState(() {
@@ -62,7 +71,7 @@ class ChooseBusState extends State<ChooseBusPage> {
               _busManager.busSelfStop = info;
             }
           }
-          hasStationSaved = false;
+          // hasStationSaved = false;
         }
       });
     };
@@ -81,124 +90,144 @@ class ChooseBusState extends State<ChooseBusPage> {
       if (_busManager.busLine != null) {
         _busManager.getDirList().then(updateDirCallBack);
       }
-      _busManager.getBusList().then(updateBusesCallBack);
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(
-          image: DecorationImage(
-              image: AssetImage('assets/choose_bus_bg.jpg'),
-              fit: BoxFit.fitHeight)),
-      child: Center(
-          child: new Stepper(
-        currentStep: this.currentStep,
-        steps: [
-          new Step(
-              // Title of the Step
-              title: new Text(_busManager.busLine == null
-                  ? StringRes.chooseBus
-                  : StringRes.chooseBus + ': ${_busManager.busLine}'),
-              // Content, it can be any widget here. Using basic Text for this example
-              content: _getChooseBusItem(),
-              isActive: currentStep >= STEP_CHOOSE_BUS),
-          new Step(
-              title: new Text(_busManager.busDir == null
-                  ? StringRes.chooseDir
-                  : StringRes.chooseDir + ': ${_busManager.busDir.direction}'),
-              content: _getChooseDirItem(),
-              // You can change the style of the step icon i.e number, editing, etc.
-              isActive: currentStep >= STEP_CHOOSE_DIR),
-          new Step(
-              title: new Text(_busManager.busSelfStop == null
-                  ? StringRes.chooseStation
-                  : StringRes.chooseStation +
-                      ': ${_busManager.busSelfStop.name}'),
-              content: _getChooseStationItem(),
-              isActive: currentStep >= STEP_CHOOSE_STATION),
-        ],
-        controlsBuilder: (BuildContext context,
-            {VoidCallback onStepContinue, VoidCallback onStepCancel}) {
-          return Row(
-            children: <Widget>[
-              FlatButton(
-                onPressed: onStepContinue,
-                child: Text(
-                    currentStep < STEP_CHOOSE_STATION
-                        ? StringRes.next_step
-                        : StringRes.queryBus,
-                    style: StyleRes.saveBusButtonTextStyle),
-              ),
-              FlatButton(
-                onPressed: onStepCancel,
-                child: Text('取消'),
-              ),
-            ],
-          );
-        },
-        type: StepperType.vertical,
-        onStepCancel: () {
-          setState(() {
-            switch (currentStep) {
-              case STEP_CHOOSE_BUS:
-                _busManager.busLine = null;
-                currentStep = 0;
-                break;
-              case STEP_CHOOSE_DIR:
-                _busManager.busDir = null;
-                currentStep = currentStep - 1;
-                break;
-              case STEP_CHOOSE_STATION:
-                _busManager.busSelfStop = null;
-                currentStep = currentStep - 1;
-                break;
-            }
-          });
-          print("onStepCancel : " + currentStep.toString());
-        },
-        onStepContinue: () {
-          String msg;
-          if (_busManager.busLine == null) {
-            msg = StringRes.choose_bus_hint;
-          } else if (_busManager.busDir == null) {
-            msg = StringRes.choose_dir_hint;
-          } else if (_busManager.busSelfStop == null) {
-            msg = StringRes.choose_selfStop_hint;
-          }
-          switch (currentStep) {
-            case STEP_CHOOSE_BUS:
-              if (_busManager.busLine != null) {
-                //todo 加载进度
-                _busManager.getDirList().then(updateDirCallBack);
-              } else {
-                CommonUtil.toast(msg);
-              }
-              break;
-            case STEP_CHOOSE_DIR:
-              if (_busManager.busDir != null) {
-                //todo 加载进度
-                _busManager.getStationList().then(updateStationsCallBack);
-              } else {
-                CommonUtil.toast(msg);
-              }
-              break;
-            case STEP_CHOOSE_STATION:
-              if (msg == null) {
-                //todo 加载进度
-                _busManager
-                    .getOnlineBusInfo(context)
-                    .then(queryStationsCallBack);
-              } else {
-                CommonUtil.toast(msg);
-              }
-              break;
-          }
-          print("onStepContinue : " + currentStep.toString());
-        },
-      )),
-    );
+        decoration: BoxDecoration(
+            image: DecorationImage(
+                image: AssetImage('assets/choose_bus_bg.jpg'),
+                fit: BoxFit.fitHeight)),
+        child: Center(
+            child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Container(
+              width: 100,
+              height: 100,
+              child: currentStep >= STEP_CHOOSE_DIR
+                  ? NimaActor('assets/runLoading.nima',
+                      fit: BoxFit.scaleDown, animation: 'Run')
+                  : NimaActor('assets/runLoading.nima', fit: BoxFit.scaleDown),
+            ),
+            new Stepper(
+              currentStep: this.currentStep,
+              steps: [
+                new Step(
+                    // Title of the Step
+                    title: new Text(_busManager.busLine == null
+                        ? StringRes.chooseBus
+                        : StringRes.chooseBus + ': ${_busManager.busLine}'),
+                    // Content, it can be any widget here. Using basic Text for this example
+                    content: _getChooseBusItem(),
+                    isActive: currentStep >= STEP_CHOOSE_BUS),
+                new Step(
+                    title: new Text(_busManager.busDir == null
+                        ? StringRes.chooseDir
+                        : StringRes.chooseDir +
+                            ': ${_busManager.busDir.direction}'),
+                    content: _getChooseDirItem(),
+                    // You can change the style of the step icon i.e number, editing, etc.
+                    isActive: currentStep >= STEP_CHOOSE_DIR),
+                new Step(
+                    title: new Text(_busManager.busSelfStop == null
+                        ? StringRes.chooseStation
+                        : StringRes.chooseStation +
+                            ': ${_busManager.busSelfStop.name}'),
+                    content: _getChooseStationItem(),
+                    isActive: currentStep >= STEP_CHOOSE_STATION),
+              ],
+              controlsBuilder: (BuildContext context,
+                  {VoidCallback onStepContinue, VoidCallback onStepCancel}) {
+                return Row(
+                  children: <Widget>[
+                    FlatButton(
+                      onPressed: onStepContinue,
+                      child: Text(
+                          currentStep < STEP_CHOOSE_STATION
+                              ? StringRes.next_step
+                              : StringRes.queryBus,
+                          style: StyleRes.saveBusButtonTextStyle),
+                    ),
+                    FlatButton(
+                      onPressed: onStepCancel,
+                      child: Text(StringRes.concel),
+                    ),
+                  ],
+                );
+              },
+              type: StepperType.vertical,
+              onStepCancel: () {
+                setState(() {
+                  switch (currentStep) {
+                    case STEP_CHOOSE_BUS:
+                      _busManager.busLine = null;
+                      currentStep = 0;
+                      break;
+                    case STEP_CHOOSE_DIR:
+                      _busManager.busDir = null;
+                      currentStep = currentStep - 1;
+                      break;
+                    case STEP_CHOOSE_STATION:
+                      _busManager.busSelfStop = null;
+                      currentStep = currentStep - 1;
+                      break;
+                  }
+                });
+                print("onStepCancel : " + currentStep.toString());
+              },
+              onStepContinue: () {
+                String msg;
+                if (_busManager.busLine == null) {
+                  msg = StringRes.choose_bus_hint;
+                } else if (_busManager.busDir == null) {
+                  msg = StringRes.choose_dir_hint;
+                } else if (_busManager.busSelfStop == null) {
+                  msg = StringRes.choose_selfStop_hint;
+                }
+                switch (currentStep) {
+                  case STEP_CHOOSE_BUS:
+                    if (_busManager.busLine != null) {
+                      //todo 加载进度
+                      setState(() {
+                        _busManager.getDirList().then(updateDirCallBack);
+                      });
+                    } else {
+                      CommonUtil.toast(msg);
+                    }
+                    break;
+                  case STEP_CHOOSE_DIR:
+                    if (_busManager.busDir != null) {
+                      //todo 加载进度
+                      setState(() {
+                        _busManager
+                            .getStationList()
+                            .then(updateStationsCallBack);
+                      });
+                    } else {
+                      CommonUtil.toast(msg);
+                    }
+                    break;
+                  case STEP_CHOOSE_STATION:
+                    if (msg == null) {
+                      //todo 加载进度
+                      setState(() {
+                        _busManager
+                            .getOnlineBusInfo(context)
+                            .then(queryStationsCallBack);
+                      });
+                    } else {
+                      CommonUtil.toast(msg);
+                    }
+                    break;
+                }
+                print("onStepContinue : " + currentStep.toString());
+              },
+            ),
+          ],
+        )));
   }
 
   Widget _getChooseBusItem() {
@@ -208,14 +237,9 @@ class ChooseBusState extends State<ChooseBusPage> {
           ? Text(StringRes.chooseBus, style: StyleRes.chooseBusButtonTextStyle)
           : Text(_busManager.busLine, style: StyleRes.chooseBusButtonTextStyle),
       onPressed: () {
-        showDialog(
-            context: context,
-            builder: (BuildContext context) {
-              return SimpleDialog(
-                title: Text(StringRes.chooseBus),
-                children: _getBusLineWidgets(context),
-              );
-            });
+        setState(() {
+          _busManager.getBusList().then(updateBusesCallBack);
+        });
       },
     );
   }
@@ -258,25 +282,6 @@ class ChooseBusState extends State<ChooseBusPage> {
                 );
               });
         });
-  }
-
-  List<SimpleDialogOption> _getBusLineWidgets(BuildContext context) {
-    var busLineWeights = <SimpleDialogOption>[];
-    for (String bus in _busManager.busLineList) {
-      busLineWeights.add(SimpleDialogOption(
-        child: Text(bus),
-        onPressed: () {
-          Navigator.of(context).pop();
-          print('chooseBus$bus');
-          if (bus != _busManager.busLine) {
-            setState(() {
-              _busManager.busLine = bus;
-            });
-          }
-        },
-      ));
-    }
-    return busLineWeights;
   }
 
   List<SimpleDialogOption> _getBusDirWidgets(BuildContext context) {
