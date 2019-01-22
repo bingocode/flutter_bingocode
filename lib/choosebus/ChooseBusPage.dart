@@ -7,7 +7,8 @@ import 'package:flutter_bingocode/manager/BusManager.dart';
 import 'package:flutter_bingocode/resources/strings.dart';
 import 'package:flutter_bingocode/resources/styles.dart';
 import 'package:flutter_bingocode/showbus/ShowBusPage.dart';
-import 'package:fluttertoast/fluttertoast.dart';
+import 'package:flutter_bingocode/util/CommonUtil.dart';
+import 'package:flutter_bingocode/util/ConstantUtil.dart';
 
 class ChooseBusPage extends StatefulWidget {
   @override
@@ -17,33 +18,66 @@ class ChooseBusPage extends StatefulWidget {
 }
 
 class ChooseBusState extends State<ChooseBusPage> {
+  static const STEP_COUNT = 3;
+  static const STEP_CHOOSE_BUS = 0;
+  static const STEP_CHOOSE_DIR = 1;
+  static const STEP_CHOOSE_STATION = 2;
   final Utf8Decoder decoder = new Utf8Decoder();
   BusManager _busManager;
   UpdateCallBack<List<String>> updateBusesCallBack;
   UpdateCallBack<List<DirInfo>> updateDirCallBack;
   UpdateCallBack<List<StationInfo>> updateStationsCallBack;
   UpdateCallBack<List<StationInfo>> queryStationsCallBack;
+  int currentStep = STEP_CHOOSE_BUS;
+  bool hasDirSaved = false;
+  bool hasStationSaved = false;
 
   @override
   void initState() {
     super.initState();
+    _busManager = BusManager();
     updateBusesCallBack = (List<String> buses) {
       setState(() {});
     };
     updateDirCallBack = (List<DirInfo> dirinfos) {
-      setState(() {});
+      setState(() {
+        currentStep = STEP_CHOOSE_DIR;
+        if (hasDirSaved) {
+          for (DirInfo info in dirinfos) {
+            if (info.directionId == _busManager.busDirId) {
+              _busManager.busDir = info;
+              _busManager.getStationList().then(updateStationsCallBack);
+            }
+          }
+          hasDirSaved = false;
+        }
+      });
     };
-    updateStationsCallBack = (List<StationInfo> dirinfos) {
-      setState(() {});
+    updateStationsCallBack = (List<StationInfo> staionInfos) {
+      setState(() {
+        currentStep = STEP_CHOOSE_STATION;
+        if (hasStationSaved) {
+          for (StationInfo info in staionInfos) {
+            if (info.index == _busManager.busSelfStopId) {
+              _busManager.busSelfStop = info;
+            }
+          }
+          hasStationSaved = false;
+        }
+      });
     };
+
     queryStationsCallBack = (List<StationInfo> dirinfos) {
       print("query onLine busInfo");
       Navigator.push(
           context, MaterialPageRoute(builder: (context) => ShowBusPage()));
     };
-    _busManager = BusManager();
-    _busManager.getSavedBusLine().then((String saveBusLine) {
-      _busManager.busLine = saveBusLine;
+    _busManager.getSavedBusLine().then((Map<String, String> savedMap) {
+      _busManager.busLine = savedMap[KeyConstant.keyBusLine];
+      _busManager.busDirId = savedMap[KeyConstant.keyBusDir];
+      _busManager.busSelfStopId = savedMap[KeyConstant.keyBusStation];
+      hasDirSaved = _busManager.busDirId != null;
+      hasStationSaved = _busManager.busSelfStopId != null;
       if (_busManager.busLine != null) {
         _busManager.getDirList().then(updateDirCallBack);
       }
@@ -59,113 +93,171 @@ class ChooseBusState extends State<ChooseBusPage> {
               image: AssetImage('assets/choose_bus_bg.jpg'),
               fit: BoxFit.fitHeight)),
       child: Center(
-          child: new Column(
-        mainAxisAlignment: MainAxisAlignment.center, // 主轴方向居中
-        crossAxisAlignment: CrossAxisAlignment.center, // 辅轴方向居中
-        children: <Widget>[
-          Padding(
-              padding: const EdgeInsets.only(bottom: 20.0),
-              child: GestureDetector(
-                onTap: () {
-                  _busManager.saveBusLine();
-                },
-                child: Text(StringRes.saveBusLine,
-                    style: StyleRes.saveBusButtonTextStyle),
-              )),
-          Padding(
-            padding: const EdgeInsets.only(bottom: 20.0),
-            child: MaterialButton(
-              color: Colors.blueAccent,
-              child: _busManager.busLine == null
-                  ? Text(StringRes.chooseBus,
-                      style: StyleRes.chooseBusButtonTextStyle)
-                  : Text(_busManager.busLine,
-                      style: StyleRes.chooseBusButtonTextStyle),
-              onPressed: () {
-                showDialog(
-                    context: context,
-                    builder: (BuildContext context) {
-                      return SimpleDialog(
-                        title: Text(StringRes.chooseBus),
-                        children: _getBusLineWidgets(context),
-                      );
-                    });
-              },
-            ),
-          ),
-          Padding(
-              padding: const EdgeInsets.only(bottom: 20.0),
-              child: MaterialButton(
-                color: Colors.blueAccent,
-                child: _busManager.busDir == null
-                    ? Text(StringRes.chooseDir,
-                        style: StyleRes.chooseBusButtonTextStyle)
-                    : Text(_busManager.busDir.direction,
-                        style: StyleRes.chooseBusButtonTextStyle),
-                onPressed: () {
-                  showDialog(
-                      context: context,
-                      builder: (BuildContext context) {
-                        return SimpleDialog(
-                          title: Text(StringRes.chooseDir),
-                          children: _getBusDirWidgets(context),
-                        );
-                      });
-                },
-              )),
-          Padding(
-              padding: const EdgeInsets.only(bottom: 20.0),
-              child: MaterialButton(
-                color: Colors.blueAccent,
-                child: _busManager.busSelfStop == null
-                    ? Text(StringRes.chooseStation,
-                        style: StyleRes.chooseBusButtonTextStyle)
-                    : Text(_busManager.busSelfStop.name,
-                        style: StyleRes.chooseBusButtonTextStyle),
-                onPressed: () {
-                  showDialog(
-                      context: context,
-                      builder: (BuildContext context) {
-                        return SimpleDialog(
-                          title: Text(StringRes.chooseStation),
-                          children: _getBusStationWidgets(context),
-                        );
-                      });
-                },
-              )),
-          Padding(
-            padding: const EdgeInsets.only(bottom: 20.0),
-            child: MaterialButton(
-                color: Colors.greenAccent,
-                child: Text(StringRes.queryBus,
-                    style: StyleRes.chooseBusButtonTextStyle),
-                onPressed: () {
-                  if (_busManager.busLine != null &&
-                      _busManager.busDir != null &&
-                      _busManager.busSelfStop != null) {
-                    _busManager
-                        .getOnlineBusInfo(context)
-                        .then(queryStationsCallBack);
-                  } else {
-                    String msg = StringRes.choose_bus_hint;
-                    if (_busManager.busDir == null) {
-                      msg = StringRes.choose_dir_hint;
-                    } else if (_busManager.busSelfStop == null) {
-                      msg = StringRes.choose_selfStop_hint;
-                    }
-                    Fluttertoast.showToast(
-                        msg: msg,
-                        toastLength: Toast.LENGTH_SHORT,
-                        gravity: ToastGravity.BOTTOM,
-                        timeInSecForIos: 1,
-                        backgroundColor: Colors.grey,
-                        textColor: Colors.white);
-                  }
-                }),
-          )
+          child: new Stepper(
+        currentStep: this.currentStep,
+        steps: [
+          new Step(
+              // Title of the Step
+              title: new Text(_busManager.busLine == null
+                  ? StringRes.chooseBus
+                  : StringRes.chooseBus + ': ${_busManager.busLine}'),
+              // Content, it can be any widget here. Using basic Text for this example
+              content: _getChooseBusItem(),
+              isActive: currentStep >= STEP_CHOOSE_BUS),
+          new Step(
+              title: new Text(_busManager.busDir == null
+                  ? StringRes.chooseDir
+                  : StringRes.chooseDir + ': ${_busManager.busDir.direction}'),
+              content: _getChooseDirItem(),
+              // You can change the style of the step icon i.e number, editing, etc.
+              isActive: currentStep >= STEP_CHOOSE_DIR),
+          new Step(
+              title: new Text(_busManager.busSelfStop == null
+                  ? StringRes.chooseStation
+                  : StringRes.chooseStation +
+                      ': ${_busManager.busSelfStop.name}'),
+              content: _getChooseStationItem(),
+              isActive: currentStep >= STEP_CHOOSE_STATION),
         ],
+        controlsBuilder: (BuildContext context,
+            {VoidCallback onStepContinue, VoidCallback onStepCancel}) {
+          return Row(
+            children: <Widget>[
+              FlatButton(
+                onPressed: onStepContinue,
+                child: Text(
+                    currentStep < STEP_CHOOSE_STATION
+                        ? StringRes.next_step
+                        : StringRes.queryBus,
+                    style: StyleRes.saveBusButtonTextStyle),
+              ),
+              FlatButton(
+                onPressed: onStepCancel,
+                child: Text('取消'),
+              ),
+            ],
+          );
+        },
+        type: StepperType.vertical,
+        onStepCancel: () {
+          setState(() {
+            switch (currentStep) {
+              case STEP_CHOOSE_BUS:
+                _busManager.busLine = null;
+                currentStep = 0;
+                break;
+              case STEP_CHOOSE_DIR:
+                _busManager.busDir = null;
+                currentStep = currentStep - 1;
+                break;
+              case STEP_CHOOSE_STATION:
+                _busManager.busSelfStop = null;
+                currentStep = currentStep - 1;
+                break;
+            }
+          });
+          print("onStepCancel : " + currentStep.toString());
+        },
+        onStepContinue: () {
+          String msg;
+          if (_busManager.busLine == null) {
+            msg = StringRes.choose_bus_hint;
+          } else if (_busManager.busDir == null) {
+            msg = StringRes.choose_dir_hint;
+          } else if (_busManager.busSelfStop == null) {
+            msg = StringRes.choose_selfStop_hint;
+          }
+          switch (currentStep) {
+            case STEP_CHOOSE_BUS:
+              if (_busManager.busLine != null) {
+                //todo 加载进度
+                _busManager.getDirList().then(updateDirCallBack);
+              } else {
+                CommonUtil.toast(msg);
+              }
+              break;
+            case STEP_CHOOSE_DIR:
+              if (_busManager.busDir != null) {
+                //todo 加载进度
+                _busManager.getStationList().then(updateStationsCallBack);
+              } else {
+                CommonUtil.toast(msg);
+              }
+              break;
+            case STEP_CHOOSE_STATION:
+              if (msg == null) {
+                //todo 加载进度
+                _busManager
+                    .getOnlineBusInfo(context)
+                    .then(queryStationsCallBack);
+              } else {
+                CommonUtil.toast(msg);
+              }
+              break;
+          }
+          print("onStepContinue : " + currentStep.toString());
+        },
       )),
     );
+  }
+
+  Widget _getChooseBusItem() {
+    return MaterialButton(
+      color: Colors.blueAccent,
+      child: _busManager.busLine == null
+          ? Text(StringRes.chooseBus, style: StyleRes.chooseBusButtonTextStyle)
+          : Text(_busManager.busLine, style: StyleRes.chooseBusButtonTextStyle),
+      onPressed: () {
+        showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return SimpleDialog(
+                title: Text(StringRes.chooseBus),
+                children: _getBusLineWidgets(context),
+              );
+            });
+      },
+    );
+  }
+
+  Widget _getChooseDirItem() {
+    return MaterialButton(
+        color: Colors.blueAccent,
+        child: _busManager.busDir == null
+            ? Text(StringRes.chooseDir,
+                style: StyleRes.chooseBusButtonTextStyle)
+            : Text(_busManager.busDir.direction,
+                style: StyleRes.chooseBusButtonTextStyle),
+        onPressed: () {
+          showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                return SimpleDialog(
+                  title: Text(StringRes.chooseDir),
+                  children: _getBusDirWidgets(context),
+                );
+              });
+        });
+  }
+
+  Widget _getChooseStationItem() {
+    return MaterialButton(
+        color: Colors.blueAccent,
+        child: _busManager.busSelfStop == null
+            ? Text(StringRes.chooseStation,
+                style: StyleRes.chooseBusButtonTextStyle)
+            : Text(_busManager.busSelfStop.name,
+                style: StyleRes.chooseBusButtonTextStyle),
+        onPressed: () {
+          showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                return SimpleDialog(
+                  title: Text(StringRes.chooseStation),
+                  children: _getBusStationWidgets(context),
+                );
+              });
+        });
   }
 
   List<SimpleDialogOption> _getBusLineWidgets(BuildContext context) {
@@ -175,13 +267,11 @@ class ChooseBusState extends State<ChooseBusPage> {
         child: Text(bus),
         onPressed: () {
           Navigator.of(context).pop();
-          print('choose$bus');
+          print('chooseBus$bus');
           if (bus != _busManager.busLine) {
-            _busManager.busDir = null;
-            _busManager.busSelfStop = null;
-            _busManager.busLine = bus;
-            _busManager.stationInfoList.clear();
-            _busManager.getDirList().then(updateDirCallBack);
+            setState(() {
+              _busManager.busLine = bus;
+            });
           }
         },
       ));
@@ -196,10 +286,10 @@ class ChooseBusState extends State<ChooseBusPage> {
         child: Text(dir.direction),
         onPressed: () {
           Navigator.of(context).pop();
-          print('choose${dir.direction}');
-          _busManager.busSelfStop = null;
-          _busManager.busDir = dir;
-          _busManager.getStationList().then(updateStationsCallBack);
+          print('chooseDir${dir.direction}');
+          setState(() {
+            _busManager.busDir = dir;
+          });
         },
       ));
     }
@@ -213,7 +303,7 @@ class ChooseBusState extends State<ChooseBusPage> {
         child: Text(station.name),
         onPressed: () {
           Navigator.of(context).pop();
-          print('choose${station.name}');
+          print('chooseStation${station.name}');
           setState(() {
             _busManager.busSelfStop = station;
           });
