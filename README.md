@@ -9,9 +9,9 @@ flutter项目实践，实现查询北京实时公交信息，保存公交路线
  [Android App](https://www.pgyer.com/kcoC)
 
 ### 应用截图
-![北京公交OL](https://app-screenshot.pgyer.com/image/view/app_screenshots/8676937fbedb4ca0b91dfbe3a10aa249-528)
+![1](https://github.com/bingocode/flutter_bingocode/blob/master/ScreenCut/1.jpeg?raw=true)
 
-![北京公交OL](https://app-screenshot.pgyer.com/image/view/app_screenshots/f93e09a98006b9334bb6d97caf686e63-528)
+![2](https://github.com/bingocode/flutter_bingocode/blob/master/ScreenCut/2.jpeg?raw=true)
 
 
 
