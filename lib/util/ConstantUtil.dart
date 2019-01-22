@@ -9,4 +9,6 @@ class UrlConstant {
 
 class KeyConstant {
   static const keyBusLine = "busLine";
+  static const keyBusDir = "busDir";
+  static const keyBusStation = "busStation";
 }

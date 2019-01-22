@@ -4,17 +4,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bingocode/bean/DirInfo.dart';
 import 'package:flutter_bingocode/bean/StationInfo.dart';
 import 'package:flutter_bingocode/resources/strings.dart';
+import 'package:flutter_bingocode/util/CommonUtil.dart';
 import 'package:flutter_bingocode/util/ConstantUtil.dart';
-import 'package:fluttertoast/fluttertoast.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:html/dom.dart' as dom;
 import 'package:html/parser.dart' show parse;
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+
 typedef UpdateCallBack<T> = Function(T data);
 
 class BusManager {
   // 工厂模式
-  factory BusManager() =>_getInstance();
+  factory BusManager() => _getInstance();
+
   static BusManager get instance => _getInstance();
   static BusManager _instance;
   final Utf8Decoder decoder = new Utf8Decoder();
@@ -22,12 +24,15 @@ class BusManager {
   var dirInfoList = <DirInfo>[];
   var stationInfoList = <StationInfo>[];
   String busLine;
+  String busDirId;
+  String busSelfStopId;
   DirInfo busDir;
   StationInfo busSelfStop;
 
   BusManager._internal() {
     // 初始化
   }
+
   static BusManager _getInstance() {
     if (_instance == null) {
       _instance = new BusManager._internal();
@@ -35,24 +40,66 @@ class BusManager {
     return _instance;
   }
 
-  Future<String> getSavedBusLine() async {
+  Future<Map<String, String>> getSavedBusLine() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(KeyConstant.keyBusLine);
+    return {
+      KeyConstant.keyBusLine: prefs.getString(KeyConstant.keyBusLine),
+      KeyConstant.keyBusDir: prefs.getString(KeyConstant.keyBusDir),
+      KeyConstant.keyBusStation: prefs.getString(KeyConstant.keyBusStation)
+    };
   }
 
-
-  saveBusLine() async {
+  saveBusLine(BuildContext context) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    prefs.setString(KeyConstant.keyBusLine, busLine);
-    Fluttertoast.showToast(
-        msg: StringRes.save_successed,
-        toastLength: Toast.LENGTH_SHORT,
-        gravity: ToastGravity.BOTTOM,
-        timeInSecForIos: 1,
-        backgroundColor: Colors.grey,
-        textColor: Colors.white);
+    if (busLine == null) {
+      CommonUtil.toast(StringRes.choose_bus_hint);
+    } else {
+      showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Text(StringRes.saveBusLine),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: _getSaveDialogItems(),
+              ),
+              actions: <Widget>[
+                FlatButton(
+                  child: Text(StringRes.concel),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+                FlatButton(
+                  child: Text(StringRes.confirm),
+                  onPressed: () {
+                    prefs.setString(KeyConstant.keyBusLine, busLine);
+                    prefs.setString(KeyConstant.keyBusDir,
+                        busDir == null ? null : busDir.directionId);
+                    prefs.setString(KeyConstant.keyBusStation,
+                        busSelfStop == null ? null : busSelfStop.index);
+                    CommonUtil.toast(StringRes.save_successed);
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+            );
+          });
+    }
   }
 
+  List<Text> _getSaveDialogItems() {
+    var items = <Text>[];
+    items.add(Text(StringRes.chooseBus + ': $busLine'));
+    if (busDir != null) {
+      items.add(Text(StringRes.chooseDir + '：${busDir.direction}'));
+    }
+    if (busSelfStop != null) {
+      items.add(Text(StringRes.chooseStation + '：${busSelfStop.name}'));
+    }
+    return items;
+  }
 
   // 获取所有公交线
   Future<List<String>> getBusList() async {
@@ -62,7 +109,7 @@ class BusManager {
     if (responseAllBus.statusCode == 200) {
       dom.Document document = parse(data);
       List<dom.Element> aEliments =
-      document.getElementsByTagName("dd").where((dom.Element e) {
+          document.getElementsByTagName("dd").where((dom.Element e) {
         return e.attributes["id"] == 'selBLine';
       }).toList();
       print('all busLine:');
@@ -80,6 +127,9 @@ class BusManager {
 
 //  根据选择的公交线获取两个方向信息
   Future<List<DirInfo>> getDirList() async {
+    busDir = null;
+    busSelfStop = null;
+    stationInfoList.clear();
     dirInfoList.clear();
     var busDirUrl = '${UrlConstant.getDirUrl}&selBLine=$busLine';
     var responseBusDir = await http.get(busDirUrl);
@@ -98,9 +148,9 @@ class BusManager {
     return dirInfoList;
   }
 
-
   // 根据所选线路和方向获取所有站点信息
   Future<List<StationInfo>> getStationList() async {
+    busSelfStop = null;
     stationInfoList.clear();
     var busStationUrl =
         '${UrlConstant.getStationUrl}&selBLine=$busLine&selBDir=${busDir.directionId}';
@@ -120,7 +170,6 @@ class BusManager {
     }
     return stationInfoList;
   }
-
 
   // 获取实时公交信息
   Future<List<StationInfo>> getOnlineBusInfo(final BuildContext context) async {

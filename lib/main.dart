@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bingocode/choosebus/ChooseBusPage.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter_bingocode/savebus/SaveBusIcon.dart';
 void main() {
   //debugPaintSizeEnabled=true;
   runApp(new MyApp());
@@ -12,14 +13,13 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return new MaterialApp(
       title: 'Flutter Demo',
+      debugShowCheckedModeBanner: false,
       theme: new ThemeData(
         primarySwatch: Colors.blue,
       ),
       home: Scaffold(
         body: ChooseBusPage(),
-        floatingActionButton: new Theme(data: Theme.of(context).copyWith(
-          accentColor: Colors.redAccent
-        ), child: FloatingActionButton(onPressed: null, child: Icon(Icons.grade))),
+        floatingActionButton: SaveBusIcon()
       ),
     );
   }
