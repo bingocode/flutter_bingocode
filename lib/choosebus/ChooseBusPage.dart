@@ -117,25 +117,34 @@ class ChooseBusState extends State<ChooseBusPage> {
               steps: [
                 new Step(
                     // Title of the Step
-                    title: new Text(_busManager.busLine == null
-                        ? StringRes.chooseBus
-                        : StringRes.chooseBus + ': ${_busManager.busLine}'),
+                    title: new Text(
+                        _busManager.busLine == null
+                            ? StringRes.chooseBus
+                            : StringRes.chooseBus + ': ${_busManager.busLine}',
+                        softWrap: false,
+                        overflow: TextOverflow.ellipsis),
                     // Content, it can be any widget here. Using basic Text for this example
                     content: _getChooseBusItem(),
                     isActive: currentStep >= STEP_CHOOSE_BUS),
                 new Step(
-                    title: new Text(_busManager.busDir == null
-                        ? StringRes.chooseDir
-                        : StringRes.chooseDir +
-                            ': ${_busManager.busDir.direction}'),
+                    title: new Text(
+                        _busManager.busDir == null
+                            ? StringRes.chooseDir
+                            : StringRes.chooseDir +
+                                ': ${_busManager.busDir.direction}',
+                        softWrap: false,
+                        overflow: TextOverflow.ellipsis),
                     content: _getChooseDirItem(),
                     // You can change the style of the step icon i.e number, editing, etc.
                     isActive: currentStep >= STEP_CHOOSE_DIR),
                 new Step(
-                    title: new Text(_busManager.busSelfStop == null
-                        ? StringRes.chooseStation
-                        : StringRes.chooseStation +
-                            ': ${_busManager.busSelfStop.name}'),
+                    title: new Text(
+                        _busManager.busSelfStop == null
+                            ? StringRes.chooseStation
+                            : StringRes.chooseStation +
+                                ': ${_busManager.busSelfStop.name}',
+                        softWrap: false,
+                        overflow: TextOverflow.ellipsis),
                     content: _getChooseStationItem(),
                     isActive: currentStep >= STEP_CHOOSE_STATION),
               ],
