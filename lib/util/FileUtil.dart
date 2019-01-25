@@ -3,25 +3,35 @@ import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 
 class FileUtil {
-  Future<File> getLocalBusesFile() async {
+  static Future<File> getLocalBusesFile() async {
     // get the path to the document directory.
     String dir = (await getApplicationDocumentsDirectory()).path;
     return new File('$dir/buses.txt');
   }
 
-  Future<List<String>> readLocalBuses() async {
+  static Future<List<String>> readLocalBuses() async {
     try {
       File file = await getLocalBusesFile();
       String contents = await file.readAsString();
-      return contents.split(',');
+      return contents.substring(1, contents.length-1).split(', ');
     } on FileSystemException {
+      print('file error');
       return [];
     }
   }
 
-  Future<Null> saveBused(List<String> buses) async {
+  static Future<Null> saveBused(List<String> buses) async {
     // write the variable as a string to the file
-    await (await getLocalBusesFile()).writeAsString(buses.toString());
+    try {
+      File file = await getLocalBusesFile();
+      if(file.existsSync()) {
+        file.deleteSync();
+      }
+      file.writeAsString(buses.toString());
+    } on FileSystemException {
+      print("file error");
+    }
   }
+
 
 }

@@ -6,6 +6,7 @@ import 'package:flutter_bingocode/bean/StationInfo.dart';
 import 'package:flutter_bingocode/resources/strings.dart';
 import 'package:flutter_bingocode/util/CommonUtil.dart';
 import 'package:flutter_bingocode/util/ConstantUtil.dart';
+import 'package:flutter_bingocode/util/FileUtil.dart';
 import 'package:html/dom.dart' as dom;
 import 'package:html/parser.dart' show parse;
 import 'package:http/http.dart' as http;
@@ -101,31 +102,38 @@ class BusManager {
     return items;
   }
 
-  // 获取所有公交线
+  // 获取所有公交线(内存 -> 文件 -> 网络 三级缓存)
   Future<List<String>> getBusList() async {
     if (busLineList.isNotEmpty) {
       return busLineList;
     }
-    busLineList.clear();
-    var responseAllBus = await http.get(UrlConstant.getBusesUrl);
-    var data = decoder.convert(responseAllBus.bodyBytes);
-    if (responseAllBus.statusCode == 200) {
-      dom.Document document = parse(data);
-      List<dom.Element> aEliments =
-          document.getElementsByTagName("dd").where((dom.Element e) {
-        return e.attributes["id"] == 'selBLine';
-      }).toList();
-      print('all busLine:');
-      for (dom.Element e in aEliments) {
-        for (dom.Element child in e.children) {
-          print(child.text);
-          busLineList.add(child.text);
-        }
+    return FileUtil.readLocalBuses().then((List<String> buses) async {
+      busLineList = buses;
+      if (busLineList.isNotEmpty) {
+        return busLineList;
       }
-    } else {
-      print('fetch buses list error ${responseAllBus.statusCode.toString()}');
-    }
-    return busLineList;
+      busLineList.clear();
+      var responseAllBus = await http.get(UrlConstant.getBusesUrl);
+      var data = decoder.convert(responseAllBus.bodyBytes);
+      if (responseAllBus.statusCode == 200) {
+        dom.Document document = parse(data);
+        List<dom.Element> aEliments =
+            document.getElementsByTagName("dd").where((dom.Element e) {
+          return e.attributes["id"] == 'selBLine';
+        }).toList();
+        print('all busLine:');
+        for (dom.Element e in aEliments) {
+          for (dom.Element child in e.children) {
+            print(child.text);
+            busLineList.add(child.text);
+          }
+        }
+      } else {
+        print('fetch buses list error ${responseAllBus.statusCode.toString()}');
+      }
+      FileUtil.saveBused(busLineList);
+      return busLineList;
+    });
   }
 
 //  根据选择的公交线获取两个方向信息

@@ -71,7 +71,7 @@ class ChooseBusState extends State<ChooseBusPage> {
               _busManager.busSelfStop = info;
             }
           }
-          // hasStationSaved = false;
+           hasStationSaved = false;
         }
       });
     };
