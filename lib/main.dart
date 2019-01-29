@@ -1,10 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bingocode/choosebus/ChooseBusPage.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_bingocode/savebus/SaveBusIcon.dart';
 void main() {
+  // 开启布局边界
   //debugPaintSizeEnabled=true;
-  runApp(new MyApp());
+  // 强制竖屏
+  SystemChrome.setEnabledSystemUIOverlays([]);
+  SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp])
+      .then((_) {
+    runApp(new MyApp());
+  });
 }
 
 class MyApp extends StatelessWidget {
