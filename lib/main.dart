@@ -8,8 +8,9 @@ import 'package:flutter_bingocode/savebus/SaveBusIcon.dart';
 void main() {
   // 开启布局边界
   //debugPaintSizeEnabled=true;
+  // 沉浸式状态栏
+  //SystemChrome.setEnabledSystemUIOverlays([]);
   // 强制竖屏
-  SystemChrome.setEnabledSystemUIOverlays([]);
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp])
       .then((_) {
     runApp(new MyApp());

@@ -38,6 +38,7 @@ class MyInfoState extends State<MyInfoPage> {
       ),
       home: Scaffold(
           body: ListView.separated(
+            padding: EdgeInsets.all(0.0), // 直接这一句就可以实现沉浸式状态栏
             itemCount: mainItems.length,
             shrinkWrap: true,
             separatorBuilder: (context, index) {

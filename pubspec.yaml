@@ -44,7 +44,6 @@ flutter:
     - runLoading3.png
     - runLoading4.png
     - runLoading5.png
-    - awesomeLoading.flr
     - SpaceDemo.flr
   # To add assets to your application, add an assets section, like this:
   # assets:
