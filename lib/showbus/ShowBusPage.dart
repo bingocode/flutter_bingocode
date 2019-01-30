@@ -39,6 +39,7 @@ class ShowBusState extends State<ShowBusPage> {
         title: 'Flutter Demo',
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
+          backgroundColor: Colors.transparent,
           primarySwatch: Colors.blue,
         ),
         home: Scaffold(

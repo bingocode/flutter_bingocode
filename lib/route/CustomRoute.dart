@@ -30,7 +30,12 @@ class FadeRoute extends PageRouteBuilder{
 
 class SlideRoute extends PageRouteBuilder{
   final Widget widget;
-  SlideRoute(this.widget)
+  final int direction;
+  static const int LEFT = 0;
+  static const int RIGHT = 1;
+  static const int UP = 2;
+  static const int DOWN = 3;
+  SlideRoute(this.widget, this.direction)
       :super(
       transitionDuration:const Duration(seconds:1),
       pageBuilder:(
@@ -45,10 +50,7 @@ class SlideRoute extends PageRouteBuilder{
           Animation<double> animation2,
           Widget child){
         return SlideTransition(
-          position: Tween<Offset>(
-              begin: Offset(-1.0, 0.0),
-              end:Offset(0.0, 0.0)
-          )
+          position: _getTween(direction)
               .animate(CurvedAnimation(
               parent: animation1,
               curve: Curves.fastOutSlowIn
@@ -57,5 +59,30 @@ class SlideRoute extends PageRouteBuilder{
         );
       }
   );
+
+  static Tween<Offset> _getTween(int dir) {
+    switch (dir) {
+      case RIGHT:
+        return Tween<Offset>(
+            begin: Offset(-1.0, 0.0),
+            end:Offset(0.0, 0.0)
+        );
+      case UP:
+        return Tween<Offset>(
+            begin: Offset(0.0, 1.0),
+            end:Offset(0.0, 0.0)
+        );
+      case DOWN:
+        return Tween<Offset>(
+            begin: Offset(0.0, -1.0),
+            end:Offset(0.0, 0.0)
+        );
+      default:
+        return Tween<Offset>(
+            begin: Offset(1.0, 0.0),
+            end:Offset(0.0, 0.0)
+        );
+    }
+  }
 }
 

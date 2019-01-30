@@ -33,6 +33,7 @@ flutter:
   # the material Icons class.
   uses-material-design: true
   assets:
+    - ic_launcher.png
     - choose_bus_bg.jpg
     - choose_buses_bg.jpg
     - show_bus_bg.jpg

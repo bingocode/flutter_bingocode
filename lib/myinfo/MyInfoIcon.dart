@@ -7,7 +7,7 @@ class MyInfoIcon extends StatelessWidget {
     return new InkWell(
         onTap: () {
           Navigator.push(
-              context, SlideRoute(MyInfoPage()));
+              context, SlideRoute(MyInfoPage(), SlideRoute.RIGHT));
         },
         child: Hero(
           tag: 'hero_favorite',

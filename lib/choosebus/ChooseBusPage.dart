@@ -9,10 +9,11 @@ import 'package:flutter_bingocode/manager/BusManager.dart';
 import 'package:flutter_bingocode/myinfo/MyInfoIcon.dart';
 import 'package:flutter_bingocode/resources/strings.dart';
 import 'package:flutter_bingocode/resources/styles.dart';
+import 'package:flutter_bingocode/route/CustomRoute.dart';
+import 'package:flutter_bingocode/savebus/SaveBusIcon.dart';
 import 'package:flutter_bingocode/showbus/ShowBusPage.dart';
 import 'package:flutter_bingocode/util/CommonUtil.dart';
 import 'package:flutter_bingocode/util/ConstantUtil.dart';
-import 'package:flutter_bingocode/route/CustomRoute.dart';
 import 'package:nima/nima_actor.dart';
 
 class ChooseBusPage extends StatefulWidget {
@@ -101,16 +102,26 @@ class ChooseBusState extends State<ChooseBusPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: <Widget>[
-        buildContainer(context),
-        Container(
-          alignment: Alignment.bottomLeft,
-          margin: EdgeInsets.fromLTRB(16, 0, 0, 16),
-          child: MyInfoIcon(),
-        )
-      ],
-    );
+    return MaterialApp(
+        title: 'Flutter Demo',
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          backgroundColor: Colors.transparent,
+          primarySwatch: Colors.blue,
+        ),
+        home: Scaffold(
+          body: Stack(
+            children: <Widget>[
+              buildContainer(context),
+              Container(
+                alignment: Alignment.bottomLeft,
+                margin: EdgeInsets.fromLTRB(16, 0, 0, 16),
+                child: MyInfoIcon(),
+              )
+            ],
+          ),
+          floatingActionButton: SaveBusIcon(),
+        ));
   }
 
   Container buildContainer(BuildContext context) {
