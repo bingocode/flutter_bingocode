@@ -1,10 +1,13 @@
 import 'package:flare_flutter/flare_actor.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bingocode/myinfo/FavoriteIcon.dart';
 import 'package:flutter_bingocode/resources/strings.dart';
 import 'package:flutter_bingocode/resources/styles.dart';
 import 'package:flutter_bingocode/util/CommonUtil.dart';
+import 'package:flutter_bingocode/util/ConstantUtil.dart';
+import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
 
 class MyInfoPage extends StatefulWidget {
@@ -16,6 +19,8 @@ class MyInfoPage extends StatefulWidget {
 }
 
 class MyInfoState extends State<MyInfoPage> {
+  final TextEditingController _controller = new TextEditingController();
+
   var seprateItems = <Widget>[];
   var mainItems = <Widget>[];
 
@@ -38,7 +43,8 @@ class MyInfoState extends State<MyInfoPage> {
       ),
       home: Scaffold(
           body: ListView.separated(
-            padding: EdgeInsets.all(0.0), // 直接这一句就可以实现沉浸式状态栏
+            padding: EdgeInsets.all(0.0),
+            // 直接这一句就可以实现沉浸式状态栏
             itemCount: mainItems.length,
             shrinkWrap: true,
             separatorBuilder: (context, index) {
@@ -58,12 +64,18 @@ class MyInfoState extends State<MyInfoPage> {
     );
   }
 
+
+  @override
+  void dispose() {
+    //todo 去除监听器
+    super.dispose();
+  }
+
   _initSeprateItems() {
     seprateItems.add(_buildSeprateItem(StringRes.project_introduce));
     seprateItems.add(_buildSeprateItem(StringRes.project_address));
     seprateItems.add(_buildSeprateItem(StringRes.version_info));
     seprateItems.add(_buildSeprateItem(StringRes.comment));
-
   }
 
   Widget _buildSeprateItem(String title) {
@@ -106,7 +118,18 @@ class MyInfoState extends State<MyInfoPage> {
             print('open ${StringRes.beijin_bus_addr}');
             launch(StringRes.beijin_bus_addr);
           },
-      )
+      ),
+      TextSpan(text: StringRes.contact_me),
+      TextSpan(
+        text: StringRes.my_email,
+        style: StyleRes.LinkTextStyle,
+        recognizer: new TapGestureRecognizer()
+          ..onTap = () {
+            //增加一个点击事件
+            Clipboard.setData(new ClipboardData(text: StringRes.my_email));
+            CommonUtil.toast("已复制邮箱");
+          },
+      ),
     ])));
 
     var m2 = _buildMainItem(Text.rich(TextSpan(
@@ -140,25 +163,26 @@ class MyInfoState extends State<MyInfoPage> {
         Padding(
           padding: const EdgeInsets.only(bottom: 10),
           child: TextField(
-                maxLines: 5,
-                decoration: InputDecoration(
-                    contentPadding: EdgeInsets.all(10.0),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10.0),
-                    ))),
+              controller: _controller,
+              maxLines: 5,
+              decoration: InputDecoration(
+                  contentPadding: EdgeInsets.all(10.0),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10.0),
+                  ))),
         ),
         InkWell(
           onTap: () {
-            CommonUtil.toast("提交成功");
+            _submitComment();
           },
           child: Container(
-            padding: EdgeInsets.fromLTRB(8,3,8,3),
+              padding: EdgeInsets.fromLTRB(8, 3, 8, 3),
               decoration: BoxDecoration(
-                shape: BoxShape.rectangle,
-                border: Border.all(color: Colors.blueAccent, width: 1),
-                borderRadius: BorderRadius.all(Radius.circular(5))
-              ),
-              child: Text(StringRes.submit, style: StyleRes.saveBusButtonTextStyle)),
+                  shape: BoxShape.rectangle,
+                  border: Border.all(color: Colors.blueAccent, width: 1),
+                  borderRadius: BorderRadius.all(Radius.circular(5))),
+              child: Text(StringRes.submit,
+                  style: StyleRes.saveBusButtonTextStyle)),
         ),
       ],
     ));
@@ -168,5 +192,23 @@ class MyInfoState extends State<MyInfoPage> {
     mainItems.add(m2);
     mainItems.add(m3);
     mainItems.add(m4);
+  }
+
+  Future _submitComment() async {
+    var content = _controller.text;
+    if (content.isEmpty) {
+      CommonUtil.toast("请输入内容");
+      return;
+    }
+    var submitUrl = '${UrlConstant.commentUrl}$content';
+    var responseBusDir = await http.get(submitUrl);
+    if (responseBusDir.statusCode == 200) {
+      //清空评论
+      _controller.clear();
+      CommonUtil.toast("提交成功");
+    } else {
+      print('submit comment error ${responseBusDir.statusCode.toString()}');
+      CommonUtil.toast("提交失败");
+    }
   }
 }

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bingocode/choosebus/ChooseBusPage.dart';
 import 'package:flutter_bingocode/route/CustomRoute.dart';
-import 'package:flutter_bingocode/showbus/ShowBusPage.dart';
 import 'package:flutter_bingocode/util/AnimationUtil.dart';
 class SplashPage extends StatefulWidget {
   @override
@@ -28,9 +27,9 @@ class SplashPageState extends State<SplashPage> with SingleTickerProviderStateMi
       if (status == AnimationStatus.completed) {
         //Navigator.push(context, FadeRoute(ChooseBusPage()));
         //Navigator.of(context).pushReplacementNamed('/MainPage');
-        Navigator.pushReplacement(context, SlideRoute(ChooseBusPage(), SlideRoute.UP));
+        Navigator.pushReplacement(context, SlideRoute(ChooseBusPage(), SlideRoute.DOWN));
       } else if (status == AnimationStatus.dismissed) {
-
+        Navigator.pushReplacement(context, SlideRoute(ChooseBusPage(), SlideRoute.DOWN));
       }
     });
 
@@ -40,10 +39,6 @@ class SplashPageState extends State<SplashPage> with SingleTickerProviderStateMi
   Widget build(BuildContext context) {
     // TODO: implement build
     return Container(
-//      decoration: BoxDecoration(
-//          image: DecorationImage(
-//              image: AssetImage('assets/choose_bus_bg.jpg'),
-//              fit: BoxFit.fitHeight)),
       child: Center(
         child: TransitionAnimation(child: Image.asset(('assets/ic_launcher.png')), animation: animation),
       ),
