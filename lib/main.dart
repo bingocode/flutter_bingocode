@@ -1,10 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_bingocode/SplashPage.dart';
 import 'package:flutter_bingocode/choosebus/ChooseBusPage.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter_bingocode/route/CustomRoute.dart';
 import 'package:flutter_bingocode/savebus/SaveBusIcon.dart';
 void main() {
+  // 开启布局边界
   //debugPaintSizeEnabled=true;
-  runApp(new MyApp());
+  // 沉浸式状态栏
+  //SystemChrome.setEnabledSystemUIOverlays([]);
+  // 强制竖屏
+  SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp])
+      .then((_) {
+    runApp(new MyApp());
+  });
 }
 
 class MyApp extends StatelessWidget {
@@ -16,10 +26,10 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: new ThemeData(
         primarySwatch: Colors.blue,
+        backgroundColor: Colors.transparent
       ),
       home: Scaffold(
-        body: ChooseBusPage(),
-        floatingActionButton: SaveBusIcon()
+        body: SplashPage(),
       ),
     );
   }

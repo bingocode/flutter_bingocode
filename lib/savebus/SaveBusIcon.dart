@@ -38,7 +38,7 @@ class SaveBusIconState extends State<SaveBusIcon> {
               _busManager.saveBusLine(context);
             },
             child: Icon(
-              Icons.favorite,
+              Icons.grade,
               color: hasSaved ? Colors.redAccent : Colors.white,
               size: 36,
             )));

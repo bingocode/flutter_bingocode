@@ -11,6 +11,21 @@ class StringRes {
   static const String next_step = '下一步';
   static const String confirm = '确定';
   static const String concel = '取消';
-  static const String arrived_bus = '(已到站)';
-  static const String coming_bus = '(即将到站)';
+  static const String arrived_bus = '已到站: ';
+  static const String coming_bus = '即将到站: ';
+  static const String project_introduce = '应用简介';
+  static const String my_infos = '本应用提供搜查询实时北京公交到站信息功能，阁下亦可保存常用的路线信息，简化查询流程。数据来源于';
+  static const String beijin_bus = '北京公交网';
+  static const String beijin_bus_addr = 'http://www.bjbus.com/home/index.php';
+  static const String contact_me = '。若数据有不实之处，请以官网为准。在下不才，但凡是金玉良言，请于下方留言反馈，意犹未尽者，请联系以下邮箱，在下必逐一批阅\n';
+  static const String my_email = 'bingocoder@outlook.com';
+  static const String project_address = '项目地址';
+  static const String project_github = 'github地址\n';
+  static const String project_github_address = 'https://github.com/bingocode/flutter_bingocode';
+  static const String project_juejing = '博客地址';
+  static const String project_juejing_address = 'https://juejin.im/user/598c1964f265da3e190da56e';
+  static const String comment = '用户反馈';
+  static const String version_info = '版本信息';
+  static const String version = '1.0';
+  static const String submit = '提交';
 }
