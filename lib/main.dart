@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bingocode/SplashPage.dart';
-import 'package:flutter_bingocode/choosebus/ChooseBusPage.dart';
-import 'package:flutter/rendering.dart';
-import 'package:flutter_bingocode/route/CustomRoute.dart';
-import 'package:flutter_bingocode/savebus/SaveBusIcon.dart';
+
 void main() {
   // 开启布局边界
   //debugPaintSizeEnabled=true;
@@ -25,13 +22,10 @@ class MyApp extends StatelessWidget {
       title: 'Flutter Demo',
       debugShowCheckedModeBanner: false,
       theme: new ThemeData(
-        primarySwatch: Colors.blue,
-        backgroundColor: Colors.transparent
-      ),
+          primarySwatch: Colors.blue, backgroundColor: Colors.transparent),
       home: Scaffold(
         body: SplashPage(),
       ),
     );
   }
 }
-

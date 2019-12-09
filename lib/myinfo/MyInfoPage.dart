@@ -56,12 +56,8 @@ class MyInfoState extends State<MyInfoPage> {
               return mainItems[index];
             },
           ),
-          floatingActionButton: Hero(
-            tag: 'hero_favorite',
-            child: FavoriteIcon(),
-            transitionOnUserGestures: true,
-          )),
-    );
+          floatingActionButton: FavoriteIcon(),
+    ));
   }
 
 
