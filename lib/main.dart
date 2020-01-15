@@ -8,10 +8,7 @@ void main() {
   // 沉浸式状态栏
   //SystemChrome.setEnabledSystemUIOverlays([]);
   // 强制竖屏
-  SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp])
-      .then((_) {
-    runApp(new MyApp());
-  });
+  runApp(new MyApp());
 }
 
 class MyApp extends StatelessWidget {
